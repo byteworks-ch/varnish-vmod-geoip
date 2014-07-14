@@ -1,0 +1,6 @@
+Module geoip
+Init init_function
+Function VOID config(PRIV_VCL, STRING, STRING)
+Function STRING country_name(PRIV_VCL, STRING)
+Function STRING country_code(PRIV_VCL, STRING)
+Function STRING version()
