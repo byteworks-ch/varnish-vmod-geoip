@@ -18,9 +18,9 @@
 
 #include "vrt.h"
 #include "vrt_obj.h"
-#include "bin/varnishd/cache.h"
+#include "cache/cache.h"
 
-#include "vsm.h"
+#include "vapi/vsm.h"
 #include "vcc_if.h"
 
 
@@ -32,9 +32,25 @@ typedef struct {
 } geoip_t;
 
 
-static void
-free_priv(struct vmod_priv *priv)
+char *
+WS_Dup(struct ws *ws, const char *s)
 {
+        unsigned l;
+        char *p;
+
+        WS_Assert(ws);
+        l = strlen(s) + 1;
+        p = WS_Alloc(ws, l);
+        if (p != NULL)
+                memcpy(p, s, l);
+        WS_Assert(ws);
+        return (p);
+}
+
+static void
+free_priv(void *data)
+{
+	struct vmod_priv *priv = data;
 	geoip_t *geoip = (geoip_t *) priv->priv;
 
 	if (geoip->file) free(geoip->file);
@@ -61,6 +77,8 @@ int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 {
 	init_priv(priv);
+
+	return 0;
 }
 
 
@@ -79,12 +97,11 @@ init_geoip(geoip_t *geoip)
 
 
 void
-vmod_config(struct sess *sp, struct vmod_priv *priv, const char *name, const char *value)
+vmod_config(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_STRING name, VCL_STRING value)
 {
 	geoip_t *geoip = (geoip_t *) priv->priv;
 
-	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
-	CHECK_OBJ_NOTNULL(sp->ws, WS_MAGIC);
+	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 	assert(priv);
 	assert(name);
 	assert(value);
@@ -103,14 +120,13 @@ vmod_config(struct sess *sp, struct vmod_priv *priv, const char *name, const cha
 }
 
 
-const char *
-vmod_country_name(struct sess *sp, struct vmod_priv *priv, const char *ip)
+VCL_STRING
+vmod_country_name(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_STRING ip)
 {
-	const char *temp = NULL;
+	VCL_STRING temp = NULL;
 	geoip_t *geoip = priv->priv;
 
-	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
-	CHECK_OBJ_NOTNULL(sp->ws, WS_MAGIC);
+	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 	assert(priv);
 	assert(ip);
 
@@ -118,7 +134,7 @@ vmod_country_name(struct sess *sp, struct vmod_priv *priv, const char *ip)
 
 	temp = GeoIP_country_name_by_addr(geoip->handle, ip);
 
-	return WS_Dup(sp->wrk->ws, 
+	return WS_Dup(ctx->ws, 
 		temp ? temp :
 		geoip->default_name ? geoip->default_name :
 		""
@@ -126,14 +142,13 @@ vmod_country_name(struct sess *sp, struct vmod_priv *priv, const char *ip)
 }
 
 
-const char *
-vmod_country_code(struct sess *sp, struct vmod_priv *priv, const char *ip)
+VCL_STRING
+vmod_country_code(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_STRING ip)
 {
-	const char *temp = NULL;
+	VCL_STRING temp = NULL;
 	geoip_t *geoip = priv->priv;
 
-	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
-	CHECK_OBJ_NOTNULL(sp->ws, WS_MAGIC);
+	CHECK_OBJ_NOTNULL(ctx->ws, WS_MAGIC);
 	assert(priv);
 	assert(ip);
 
@@ -141,7 +156,7 @@ vmod_country_code(struct sess *sp, struct vmod_priv *priv, const char *ip)
 
 	temp = GeoIP_country_code_by_addr(geoip->handle, ip);
 
-	return WS_Dup(sp->wrk->ws, 
+	return WS_Dup(ctx->ws, 
 		temp ? temp :
 		geoip->default_code ? geoip->default_code :
 		""
@@ -149,8 +164,8 @@ vmod_country_code(struct sess *sp, struct vmod_priv *priv, const char *ip)
 }
 
 
-const char *
-vmod_version(struct sess *sp)
+VCL_STRING
+vmod_version(const struct vrt_ctx *ctx)
 {
 	return VERSION;
 }

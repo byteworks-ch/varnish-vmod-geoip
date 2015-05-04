@@ -37,7 +37,8 @@ fi
 
 set -ex
 
-aclocal -I m4
+dataroot=$(pkg-config --variable=datarootdir varnishapi)
+aclocal -I m4 -I ${dataroot}/aclocal
 $LIBTOOLIZE --copy --force
 autoheader
 automake --add-missing --copy --foreign
