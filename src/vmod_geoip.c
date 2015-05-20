@@ -1,7 +1,7 @@
 /**
  * vmod_geoip.c
  *
- * Copyright (c) 2014 by Byteworks GmbH
+ * Copyright (c) 2014-2015 by Byteworks GmbH
  * All rights reserved
  *
  * http://www.byteworks.ch/
@@ -31,20 +31,10 @@ typedef struct {
 	GEOIP_API GeoIP *handle;
 } geoip_t;
 
-
 char *
 WS_Dup(struct ws *ws, const char *s)
 {
-        unsigned l;
-        char *p;
-
-        WS_Assert(ws);
-        l = strlen(s) + 1;
-        p = WS_Alloc(ws, l);
-        if (p != NULL)
-                memcpy(p, s, l);
-        WS_Assert(ws);
-        return (p);
+	return WS_Copy(ws, s, strlen(s));
 }
 
 static void
@@ -96,7 +86,7 @@ init_geoip(geoip_t *geoip)
 }
 
 
-void
+VCL_VOID
 vmod_config(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_STRING name, VCL_STRING value)
 {
 	geoip_t *geoip = (geoip_t *) priv->priv;

@@ -6,7 +6,7 @@ License: BSD
 Group: System Environment/Daemons
 Source0: libvmod-geoip.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: varnish > 3.0
+Requires: varnish > 4.0
 BuildRequires: make, python-docutils
 
 
@@ -19,9 +19,7 @@ A varnish vmod for geoip detection based on the client ip
 
 
 %build
-# this assumes that VARNISHSRC is defined on the rpmbuild command line, like this:
-# rpmbuild -bb --define 'VARNISHSRC /home/user/rpmbuild/BUILD/varnish-3.0.3' redhat/*spec
-./configure VARNISHSRC=%{VARNISHSRC} VMODDIR="$(PKG_CONFIG_PATH=%{VARNISHSRC} pkg-config --variable=vmoddir varnishapi)" --prefix=/usr/ --docdir='${datarootdir}/doc/%{name}'
+./configure --prefix=/usr/ --docdir='${datarootdir}/doc/%{name}'
 make
 make check
 
@@ -42,6 +40,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Mon May 04 2015 Michael Bischof <mb@byteworks.ch> - 1.1-1
+- Updated to be compatible with varnish 4
+
 * Fri May 09 2014 Michael Bischof <mb@byteworks.ch> - 1.0-1
 - Initial version.
 
